@@ -1,0 +1,24 @@
+
+@import "tailwindcss";
+/* smooth text rendering */
+html, body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* smooth transition helper */
+.transition-smooth {
+  transition: all 150ms ease;
+}
+
+/* layout container (safe version) */
+.app-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+/* minimal card */
+.card {
+  @apply bg-white border border-gray-200 rounded-lg shadow-sm;
+}
