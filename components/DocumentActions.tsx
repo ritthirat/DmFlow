@@ -34,7 +34,7 @@ export default function DocumentActions({ id }: { id: string }) {
       <button
         onClick={handleEdit}
         disabled={loading}
-        className="ml-4 px-3 py-1 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition-colors text-sm font-medium"
+        className="ml-4 px-3 py-1 bg-gray-700 text-white rounded-lg hover:bg-gray-900 transition-colors text-sm font-medium"
       >
         Edit
       </button>

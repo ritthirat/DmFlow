@@ -11,6 +11,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <p className="text-xs text-gray-500">Document Management</p>
           </div>
         </Link>
+        <select className="w-full mb-6 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent">
+          <option>All Organizations</option>
+          <option>Organization A</option>
+          </select>      
         <nav className="space-y-1">
           <a
             href="/dashboard"
