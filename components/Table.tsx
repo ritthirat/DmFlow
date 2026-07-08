@@ -176,11 +176,11 @@ export default function Table({ documents }: { documents: any[] }) {
                   </td>
 
                   <td className="px-6 py-4 text-right text-sm">
-                    <div className="inline-flex items-center gap-3">
+                    <div className="inline-flex items-center gap-3 ">
                       <Link
                         href={`/documents/${doc.id}/edit`}
                         onClick={(e: any) => e.stopPropagation()}
-                        className="text-sm text-gray-700 hover:text-gray-900"
+                        className="text-sm text-gray-700 hover:text-gray-900 p-2 rounded-2xl transition-colors bg-yellow-400 hover:bg-yellow-500"
                       >
                         Edit
                       </Link>
@@ -190,7 +190,7 @@ export default function Table({ documents }: { documents: any[] }) {
                           e.stopPropagation();
                           handleDelete(doc.id);
                         }}
-                        className="text-sm text-red-600 hover:text-red-800"
+                        className="p-2 rounded-2xl transition-colors bg-red-500 text-sm text-white hover:bg-red-600"
                       >
                         Delete
                       </button>
