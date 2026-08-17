@@ -1,35 +1,28 @@
 // app/api/documents/route.ts
-import { documents , type Document  } from "@/lib/mockData";
 import { NextResponse } from "next/server";
-
-
+import prisma from "@/lib/prisma";
 
 export async function GET() {
-  return NextResponse.json(documents);
+  const docs = await prisma.document.findMany();
+  return NextResponse.json(docs);
 }
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    // ✅ validation ง่ายๆ
     if (!body.title || !body.content) {
-      return NextResponse.json(
-        { error: "title and content required" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "title and content required" }, { status: 400 });
     }
 
-    const newDoc: Document = {
-      id: Date.now().toString(),
-      title: body.title,
-      toOrg: body.toOrg ,
-      content: body.content,
-      status: "draft",
-      createdAt: new Date().toISOString(),
-    };
-
-    documents.push(newDoc);
+    const newDoc = await prisma.document.create({
+      data: {
+        title: body.title,
+        toOrg: body.toOrg ?? null,
+        content: body.content,
+        status: body.status ?? "draft",
+      },
+    });
 
     return NextResponse.json(newDoc, { status: 201 });
   } catch (error) {
