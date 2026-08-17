@@ -1,15 +1,22 @@
 // app/api/documents/[id]/route.ts
 import { documents } from "@/lib/mockData";
 import { NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
 
 export async function GET(
-  req: Request,
+  request: Request,
   context: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await context.params; // 🔥 ต้อง await
-
-  const doc = documents.find((d) => d.id === id);
-
+  const { id } = await context.params;
+  const docId = Number(id);
+  const doc = await prisma.document.findUnique({
+    where: {
+      id: docId, // replace second `id` with your actual ID variable
+    },
+  });
+  if (Number.isNaN(doc)) {
+    return NextResponse.json({ error: "invalid id" }, { status: 400 });
+  }
   if (!doc) {
     return NextResponse.json({ error: "not found" }, { status: 404 });
   }
@@ -22,47 +29,30 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> },
 ) {
   const { id } = await context.params;
-  const docIndex = documents.findIndex((d) => d.id === id);
-
-  if (docIndex === -1) {
+  const docId = Number(id);
+  try {
+    await prisma.document.delete({ where: { id: docId } });
+    return NextResponse.json({ message: "deleted" });
+  } catch (e) {
     return NextResponse.json({ error: "not found" }, { status: 404 });
   }
-
-  documents.splice(docIndex, 1);
-  return NextResponse.json({ message: "Document deleted" });
+  // const docIndex = documents.findIndex((d) => d.id === id);
 }
 
 export async function PUT(
   req: Request,
   context: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await context.params;
-  const docIndex = documents.findIndex((d) => d.id === id);
-
-  if (docIndex === -1) {
-    return NextResponse.json({ error: "not found" }, { status: 404 });
-  }
-
   try {
+    const { id } = await context.params;
+    const docId = Number(id);
     const body = await req.json();
-
-    // ✅ validation ง่ายๆ
-    if (!body.title || !body.content) {
-      return NextResponse.json(
-        { error: "title and content required" },
-        { status: 400 },
-      );
-    }
-    documents[docIndex] = {
-      ...documents[docIndex],
-      title: body.title,
-      content: body.content,
-      toOrg: body.toOrg || documents[docIndex].toOrg,
-      status: body.status || documents[docIndex].status,
-    };
-
-    return NextResponse.json(documents[docIndex]);
-  } catch (error) {
-    return NextResponse.json({ error: "invalid request" }, { status: 400 });
+    const updatedDoc = await prisma.document.update({
+      where: { id: docId },
+      data: body,
+    });
+    if (updatedDoc) return NextResponse.json(updatedDoc);
+  } catch (e) {
+    return NextResponse.json({ error: "not found" }, { status: 404 });
   }
 }

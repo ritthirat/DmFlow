@@ -1,6 +1,16 @@
+"use client"
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+
+  // If on the login page, render children without the app chrome
+  if (pathname === "/login") {
+    return <div className="min-h-screen bg-gray-50">{children}</div>;
+  }
+
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar - hidden on small screens */}
