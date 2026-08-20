@@ -1,22 +1,17 @@
 
 import Link from "next/link";
 import EditForm from "@/components/EditForm";
+import prisma from "@/lib/prisma";
+import { verifySession } from "@/app/lib/dal";
 
 export default async function EditPage({
   params,
 }: {
   params: { id: string };
 }) {
+  await verifySession();
   const { id } = await params;
-
-  async function fetchDoc(id: string) {
-    return fetch(`http://localhost:3000/api/documents/${id}`, {
-      cache: "no-store",
-    })
-      .then((res) => (res.ok ? res.json() : null))
-      .catch(() => null);
-  }
-  const doc = await fetchDoc(id);
+  const doc = await prisma.document.findUnique({ where: { id: Number(id) } });
   if (!doc) {
     return (
       <div className="container max-w-3xl mx-auto">

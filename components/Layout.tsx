@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { logout } from "@/app/actions/auth";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   // If on the login page, render children without the app chrome
-  if (pathname === "/login") {
+  if (pathname === "/login" || pathname === "/login/register") {
     return <div className="min-h-screen bg-gray-50">{children}</div>;
   }
 
@@ -57,6 +58,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-sm font-medium text-gray-700">
               U
             </div>
+            <form action={logout}>
+              <button type="submit" className="text-sm text-gray-600 hover:text-gray-900">
+                Sign out
+              </button>
+            </form>
           </div>
         </header>
 

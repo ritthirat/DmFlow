@@ -1,23 +1,14 @@
 
 import Link from "next/link";
 import DocumentActions from "../../../components/DocumentActions";
+import { notFound } from "next/navigation";
+import prisma from "@/lib/prisma";
+import { verifySession } from "@/app/lib/dal";
 
 export default async function DocumentPage({ params }: { params: { id: string } }) {
+  await verifySession();
   const { id } = await params;
-  console.log("DocumentPage params:", params);
-  const res = await fetch(`http://localhost:3000/api/documents/${id}`, {
-    cache: "no-store",
-  });
-console.log("DocumentPage fetch response:", id);
-  // Safely handle empty or non-JSON responses
-  const text = await res.text();
-  let document: any = null;
-  try {
-    document = text ? JSON.parse(text) : null;
-  } catch (e) {
-    console.error('Invalid JSON from API:', text, e);
-    document = null;
-  }
+  const document = await prisma.document.findUnique({ where: { id: Number(id) } });
 
   const statusColors: Record<string, { badge: string; text: string }> = {
     approved: { badge: "bg-green-100", text: "text-green-700" },
@@ -25,13 +16,7 @@ console.log("DocumentPage fetch response:", id);
     draft: { badge: "bg-gray-100", text: "text-gray-700" },
   };
 
-  if (!document || document.error) {
-    return (
-      <div className="container p-6">
-        <p className="text-red-600">Document not found or invalid response from server.</p>
-      </div>
-    );
-  }
+  if (!document) notFound();
 
   const colors = statusColors[document.status] || statusColors.draft;
 

@@ -1,58 +1,130 @@
-// app/api/documents/[id]/route.ts
-import { documents } from "@/lib/mockData";
 import { NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
+import { getSession } from "@/app/lib/session";
 
-export async function GET(
-  request: Request,
-  context: { params: Promise<{ id: string }> },
-) {
+const parseDocumentId = async (context: {
+  params: Promise<{ id: string }>;
+}): Promise<number | null> => {
   const { id } = await context.params;
   const docId = Number(id);
-  const doc = await prisma.document.findUnique({
-    where: {
-      id: docId, // replace second `id` with your actual ID variable
-    },
-  });
-  if (Number.isNaN(doc)) {
-    return NextResponse.json({ error: "invalid id" }, { status: 400 });
-  }
-  if (!doc) {
-    return NextResponse.json({ error: "not found" }, { status: 404 });
+
+  return Number.isInteger(docId) && docId > 0 ? docId : null;
+};
+
+const isPrismaNotFoundError = (error: unknown): boolean => {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: string }).code === "P2025"
+  );
+};
+
+export async function GET(
+  _request: Request,
+  context: { params: Promise<{ id: string }> },
+) {
+  if (!(await getSession())) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
-  return NextResponse.json(doc);
+  const docId = await parseDocumentId(context);
+
+  if (docId === null) {
+    return NextResponse.json({ error: "invalid id" }, { status: 400 });
+  }
+
+  try {
+    const document = await prisma.document.findUnique({
+      where: { id: docId },
+    });
+
+    if (!document) {
+      return NextResponse.json({ error: "not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(document);
+  } catch {
+    return NextResponse.json(
+      { error: "internal server error" },
+      { status: 500 },
+    );
+  }
 }
 
 export async function DELETE(
-  req: Request,
+  _req: Request,
   context: { params: Promise<{ id: string }> },
 ) {
-  const { id } = await context.params;
-  const docId = Number(id);
-  try {
-    await prisma.document.delete({ where: { id: docId } });
-    return NextResponse.json({ message: "deleted" });
-  } catch (e) {
-    return NextResponse.json({ error: "not found" }, { status: 404 });
+  if (!(await getSession())) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-  // const docIndex = documents.findIndex((d) => d.id === id);
+
+  const docId = await parseDocumentId(context);
+
+  if (docId === null) {
+    return NextResponse.json({ error: "invalid id" }, { status: 400 });
+  }
+
+  try {
+    await prisma.document.delete({
+      where: { id: docId },
+    });
+
+    return NextResponse.json({ message: "deleted" });
+  } catch (error) {
+    if (isPrismaNotFoundError(error)) {
+      return NextResponse.json({ error: "not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(
+      { error: "internal server error" },
+      { status: 500 },
+    );
+  }
 }
 
 export async function PUT(
   req: Request,
   context: { params: Promise<{ id: string }> },
 ) {
+  if (!(await getSession())) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
+  }
+
+  const docId = await parseDocumentId(context);
+
+  if (docId === null) {
+    return NextResponse.json({ error: "invalid id" }, { status: 400 });
+  }
+
   try {
-    const { id } = await context.params;
-    const docId = Number(id);
     const body = await req.json();
-    const updatedDoc = await prisma.document.update({
+
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return NextResponse.json({ error: "invalid body" }, { status: 400 });
+    }
+
+    const { id: _ignoredId, ...safeBody } = body;
+
+    const updatedDocument = await prisma.document.update({
       where: { id: docId },
-      data: body,
+      data: safeBody,
     });
-    if (updatedDoc) return NextResponse.json(updatedDoc);
-  } catch (e) {
-    return NextResponse.json({ error: "not found" }, { status: 404 });
+
+    return NextResponse.json(updatedDocument);
+  } catch (error) {
+    if (isPrismaNotFoundError(error)) {
+      return NextResponse.json({ error: "not found" }, { status: 404 });
+    }
+
+    if (error instanceof SyntaxError) {
+      return NextResponse.json({ error: "invalid json" }, { status: 400 });
+    }
+
+    return NextResponse.json(
+      { error: "internal server error" },
+      { status: 500 },
+    );
   }
 }

@@ -1,13 +1,12 @@
 
 import Table from "@/components/Table";
 import Link from "next/link";
+import { verifySession } from "@/app/lib/dal";
+import prisma from "@/lib/prisma";
 
 export default async function DashboardPage() {
-  const res = await fetch("http://localhost:3000/api/documents", {
-    cache: "no-store",
-  });
-
-  const documents = await res.json();
+  await verifySession();
+  const documents = await prisma.document.findMany({ orderBy: { createdAt: "desc" } });
   return (
     <div className="space-y-6 max-w-6xl mx-auto">
       <div className="flex items-start justify-between">

@@ -18,10 +18,14 @@ model Document {
 
 model User {
   id        Int      @id @default(autoincrement())
-  email     String   @unique
+  username     String   @unique
   name      String?
   password  String?  // store hashed password only
-  role      String   @default("user")
+  role      String   @default("2")
   createdAt DateTime @default(now())
 }
 
+model Role {
+  id  Int  @id @default(autoincrement())
+  role_name String   @unique
+}
